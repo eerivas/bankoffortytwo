@@ -60,10 +60,6 @@ let chartData = {
   }]
 };
 
-const startingBalance = 100000;
-let yBalance = startingBalance;
-let mBalance = startingBalance
-
 const stockSymbols = ["AAPL", "GOOG", 'AMZN', 'MSFT', "META", "APA", "SOFI", "HPQ", "GME", "AMBA", "CRM", "TGT", "AVGO", "NFLX", "NET", "CRWD", "ENPH", "COIN", "PYPL"];
 function getRandomStockSymbol() {
   const randomIndex = Math.floor(Math.random() * stockSymbols.length);
@@ -71,18 +67,184 @@ function getRandomStockSymbol() {
 }
 var stockTicker = getRandomStockSymbol();
 
+/** Set variables for dyanmic document elements */
+
 const stockPriceText = document.getElementById('stock-price-text');
 const marketBalance = document.getElementById('market-balance');
 const yourScore = document.getElementById('your-score');
 const stockTickerText = document.getElementById('stock-ticker');
 const resultsText = document.getElementById('results');
+const actionToggle = document.getElementById('action-toggle');
+const historyLabel = document.getElementById('history-label');
+const leaderboard = document.getElementById('leaderboard');
+const loginButton = document.getElementById('login-register');
+const loginForm = document.getElementById('login-form');
+const submitLogin = document.getElementById('submit-login');
+const submitRegister = document.getElementById('submit-register');
+const usernameDisplay = document.getElementById('username-display');
+const submitMessage = document.getElementById('message');
+const howTo = document.getElementById('how-to');
+
+let yourShares = 0;
+let updateBalance = false;
+let displayLogin = false;
+let loggedInUser = "anon";
+let sharesOwned = false;
+
+const startingBalance = 100000;
+let mBalance = startingBalance
+let yBalance = 100000;
+
+/** Set initial values */
 
 yourScore.innerHTML = `$${yBalance.toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 marketBalance.innerHTML = `$${mBalance.toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 stockTickerText.innerHTML += stockTicker;
+resultsText.style.display = 'none';
+historyLabel.style.display = 'none';
 
-let yourShares = 0;
-let updateBalance = false;
+/** Hard coded leaderboard generation */
+
+async function updateLeaderboard() {
+  const response = await fetch('/leaderboard');
+  const topUsers = await response.json();
+  // Clear the current leaderboard
+  leaderboard.innerHTML = '';
+
+  // Add each user to the leaderboard
+  topUsers.forEach(user => {
+      const item = document.createElement('span');
+      item.textContent = `${user.username}: $${user.highScore.toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      item.style.color = 'green';
+      leaderboard.appendChild(item);
+  });
+}
+
+updateLeaderboard();
+
+async function getSavedBalance(username) {
+  const response = await fetch(`/user-score?username=${username}`);
+  const data = await response.json();
+  // assuming the response would be a JSON object like: { highScore: 123 }
+  const score = data.highScore.highScore;
+  console.log(score);
+
+  yBalance = score;
+  yourScore.innerHTML = `$${score.toLocaleString('en-US')}`
+}
+
+
+/** Saving a player's highest score */
+async function updateHighScore(username, score) {
+  const response = await fetch('/update-score' , {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, score })
+  });
+
+  if (response.ok) {
+    console.log('High Score Updated!')
+
+  } else {
+    console.log('Update failed.')
+  }
+}
+
+// Call updateHighScore at the end of each game.
+
+/** Login Functionality */
+
+loginButton.addEventListener('click', () => {
+  if (displayLogin) {
+    loginForm.style.display = 'none';
+    displayLogin = false;
+  } else {
+    loginForm.style.display = 'flex'
+    displayLogin = true;
+  }
+  console.log("clicked!")
+})
+
+/** Submitting the LOGIN request */
+submitLogin.addEventListener('click', async (event) => {
+  event.preventDefault();
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const response = await fetch('/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password })  // JSON-encode the body
+  });
+
+  if (response.ok) {
+    submitMessage.innerHTML = "Login Success!";
+    submitMessage.style.color = 'green';
+
+    loginForm.style.display = 'none';
+    displayLogin = false;
+    usernameDisplay.style.visibility = 'visible';
+    usernameDisplay.innerHTML = username;
+    
+    loggedInUser = username;
+    console.log("Logged In User: " + loggedInUser);
+
+    getSavedBalance(loggedInUser);
+    yourScore.style.color = 'white';
+
+  } else {
+    const data = await response.json();
+    console.log(data);
+    submitMessage.innerHTML = data.message;
+    submitMessage.style.color = 'red';
+  }
+});
+
+
+submitRegister.addEventListener('click', async (event) => {
+  event.preventDefault();
+
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const response = await fetch('/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      username: username,
+      password: password,
+      highScore: 0
+    })
+  });
+
+  const data = await response.json();
+
+  if (data.success) {
+    loginForm.style.display = 'none';
+    displayLogin = false;
+    usernameDisplay.style.visibility = 'visible';
+    usernameDisplay.innerHTML = username;
+    loggedInUser = username;
+
+  } else {
+    submitMessage.innerHTML = data.message;
+  }
+});
+
+
+/** Function: updateShares(action)
+ *  Parameters: action - a boolean value representing what was the most recent action
+ *  performed by the user, FALSE = SELL and TRUE = BUY.
+ * 
+ *  Description: Updates the quantity of shares the user has of the stock in real-time.
+ */
 
 function updateShares(action) {
   let stockPrice = Number(stockPriceText.innerHTML.replace("$", ""));
@@ -90,9 +252,11 @@ function updateShares(action) {
   // If action is SELL
   if (!action && yourShares != 0) {
     yourShares = 0;
-    yourScore.innerHTML = `$${yBalance.toFixed(2).toLocaleString('en-US')}`;
+    yourScore.innerHTML = `$${yBalance.toLocaleString('en-US')}`;
     updateBalance = false;
     addLine(stockPrice, 'red');
+    actionToggle.innerHTML = 'BUY';
+    actionToggle.style.color = 'green';
    
   // If action is BUY
   } else if (action && yourShares == 0) {
@@ -101,8 +265,26 @@ function updateShares(action) {
     
     // Add the green line
     addLine(stockPrice, 'green');
+    actionToggle.innerHTML = 'SELL';
+    actionToggle.style.color = 'red';
   }
 }
+
+var audioPlaying = false;
+const playButton = document.getElementById("play-music");
+
+function playAudio() { 
+  var x = document.getElementById("myAudio"); 
+  if (!audioPlaying) {
+    x.play(); 
+    audioPlaying = true;
+    playButton.style.background = 'red'
+  } else {
+    x.pause();
+    audioPlaying = false;
+    playButton.style.background = 'transparent'
+  }
+} 
 
 function addLine(price, color) {
   chart.data.datasets.push({
@@ -122,10 +304,16 @@ function addLine(price, color) {
 let isGameOver = true;
 
 // Function to draw the stock graph on the grid using Chart.js
-function drawStockGraph(stockSymbol, dates, historicalData) {
+function drawStockGraph(stockSymbol, dates, historicalData, market, your) {
   container = document.getElementById("graph-container");
+  yBalance = your;
+  yourShares = 0;
+  updateBalance = false;
+  
+  updateLeaderboard();
   
   if (chart) {
+    chart.data.datasets = chart.data.datasets.filter(dataset => dataset.label !== 'Trade Line');
     chart.destroy();
   }
 
@@ -185,8 +373,7 @@ function drawStockGraph(stockSymbol, dates, historicalData) {
 
   // populate data over 30 seconds
   let index = 0;
-  let marketStartingBalance = 100000; //get the initial balance
-  let marketShares = marketStartingBalance / Number(`${historicalData[index].toFixed(2)}`);
+  let marketShares = market / Number(`${historicalData[index].toFixed(2)}`);
 
   const intervalId = setInterval(() => {
 
@@ -223,12 +410,37 @@ function drawStockGraph(stockSymbol, dates, historicalData) {
       clearInterval(intervalId); // stop the interval
       isGameOver = true;
 
-      resultsText.innerHTML = "With the trades you made, you profited a total of " + 
-      `$${(yBalance - 100000).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}` +
-      ", beating the market by a total of " + 
-      `$${(yBalance - mBalance).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}` +
-      ". That is a " + `${(((yBalance - 100000) / 100000) * 100).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}` +
-      "% gain/loss. Refresh to play again."
+      updateHighScore(loggedInUser, yBalance);
+      updateLeaderboard();
+      sharesOwned = false;
+
+
+      const profitText = document.getElementById("profit");
+      const marketDifferenceText = document.getElementById("market-difference");
+      const percentageText = document.getElementById("percentage");
+      resultsText.style.display = 'inline';
+
+      profitText.innerHTML = `$${(yBalance - 100000).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      if (yBalance - 100000 > 0 ) {
+        profitText.style.color = 'green'
+      } else {
+        profitText.style.color = 'red';
+      }
+
+      marketDifferenceText.innerHTML =  `$${(yBalance - mBalance).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      if (yBalance - mBalance > 0 ) {
+        marketDifferenceText.style.color = 'green'
+      } else {
+        marketDifferenceText.style.color = 'red';
+      }
+      
+      percentageText.innerHTML = `${(((yBalance - 100000) / 100000) * 100).toLocaleString('en-US', {style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2})}` + "%";
+      if ((((yBalance - 100000) / 100000) * 100) > 0 ) {
+        percentageText.style.color = 'green'
+      } else {
+        percentageText.style.color = 'red';
+      }
+
     }
   }, 30000 / dates.length); // adjust timing based on number of data points
 
@@ -248,12 +460,15 @@ function generateBinarySequence() {
 
 binaryBackground.innerHTML = generateBinarySequence();
 
-async function displayStockGraph() {
+async function displayStockGraph(marketBalance, yourBalance) {
   isGameOver = false;
+  yourScore.style.color = 'white';
+
+
   stockTickerText.innerHTML = "$" + stockTicker;
   stockTicker = getRandomStockSymbol();
   const { dates, historicalData } = await fetchStockData(stockTicker);
-  drawStockGraph(stockTicker, dates, historicalData);
+  drawStockGraph(stockTicker, dates, historicalData, marketBalance, yourBalance);
 }
 
 // Add event listener for key press
@@ -261,9 +476,18 @@ document.addEventListener('keydown', function(event) {
     const actionsContainer = document.getElementById('actions');
     const actions = actionsContainer.getElementsByClassName('action');
   
+    /** ENTER key is pressed */
     if(event.keyCode === 13) {
       if (isGameOver) {
-        displayStockGraph();
+        while (actionsContainer.firstChild) {
+          actionsContainer.removeChild(actionsContainer.firstChild);
+        }
+
+        howTo.style.visibility = 'hidden';
+        actionToggle.innerHTML = '';
+        console.log("AT LINE 482: yBalance = " + yBalance);
+        displayStockGraph(yBalance, yBalance);
+        historyLabel.style.display = 'inline';
       }
     }
 
@@ -280,7 +504,9 @@ document.addEventListener('keydown', function(event) {
       action.classList.add('action', 'buy');
       action.style.color = 'green';
       action.textContent = 'BUY: ' + stockPrice;
-      updateShares(true);
+
+      sharesOwned = true;
+      updateShares(sharesOwned);
   
       // Insert the new action at the top of the container
       actionsContainer.insertBefore(action, actions[0]);
@@ -306,7 +532,9 @@ document.addEventListener('keydown', function(event) {
       action.classList.add('action', 'sell');
       action.style.color = 'red';
       action.textContent = 'SELL: ' + stockPrice;
-      updateShares(false);
+
+      sharesOwned = false;
+      updateShares(sharesOwned);
   
       // Insert the new action at the top of the container
       actionsContainer.insertBefore(action, actions[0]);

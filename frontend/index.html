@@ -12,10 +12,41 @@
     <div class="header">
         <div class="left-header">
             <img id="logo" src="/assets/BoFLogo.svg" alt="Bank of Fortytwo Logo">
+            <audio id="myAudio" src="/assets/background_song.wav" autoplay loop></audio>
+            <button id="play_music" type="button" onclick="playAudio()"></button>
+            <span id="username-display"></span>
         </div>
         <div class="right-header">
-            <span>TERMS AND CONDITIONS</span>
-            <span>ABOUT</span>
+            <div id="how-to">
+                <p>
+                    HOW TO PLAY:
+                </p>
+                <p>
+                    Warren Buffett once said, "If you aren't willing to own a stock for 10 years,
+                    don't even think about owning it for 10 minutes". <span class="red">F*ck Warren Buffett</span>. 
+                    Your goal is to <span class="green">time the market</span>.
+                </p>
+                <p>
+                    Press the <span class="green">'4'</span> key when you want to BUY. Press the <span class="red">'2'</span> key when you want to SELL.
+                </p>
+                <p>
+                    Remember. Buy <span>LOW</span>. Sell <span>HIGH</span>.
+                </p>
+                <p>
+                    Press ENTER to start.
+                </p>
+            </div>
+            <form id="login-form" action="" method="post" autocomplete="off">
+                <label for="username">USERNAME</label>
+                <input type="text" name="username" id="username">
+                <label for="password">PASSWORD</label>
+                <input type="test" name="password" id="password">
+                <span id="message"></span>
+                <input type="submit" value="LOGIN" id="submit-login">
+                <input type="submit" value="REGISTER" id="submit-register">
+                <input type="button" value="CANCEL" id="cancel-login">
+            </form>
+            <button type="button" id="login-register">LOGIN/REGISTER</button>
         </div>
     </div>
     <div class="main">
@@ -50,12 +81,24 @@
                 <div class="y-axis">
                     <span>STOCK PRICE</span>
                 </div>
+                <div class="left-column">
+                    LEADERBOARD
+                    <div id="leaderboard">
+
+                    </div>
+                </div>
                 <div id="grid-container">
                     <div id="graph-container">
                         <canvas id="stock-graph"></canvas>
                     </div>
                 </div>
-                <div id="actions"></div>
+                <div class="right-coluumn">
+                    <div class="banner">
+                        <div id="action-toggle"></div>
+                    </div>
+                    <span id="history-label">HISTORY</span>
+                    <div id="actions"></div>
+                </div>
             </div>
             <div class="buttons-container">
                 <div class="buttons">
@@ -75,7 +118,9 @@
                     </div>
                 </div>
                 <div id="results">
-
+                    With the trades you made, you profited a total of <span id="profit"></span>,
+                    beating the market by a total of <span id="market-difference"></span>. That
+                    is a <span id="percentage"></span> gain/loss. Refresh to play again.
                 </div>
             </div>
         </div>

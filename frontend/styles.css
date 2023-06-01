@@ -18,14 +18,118 @@ body {
     z-index: 1;
 }
 
+.red {
+    color: red;
+}
+
+.green {
+    color: green;
+}
+
+#how-to {
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    background-color: black;
+    padding: 10px;
+    position: absolute;
+    top: 23em;
+    left: 115em;
+    width: 110px;
+    font-size: 10px;
+}
+
+p {
+    justify-content: center;
+    align-items: center;
+}
+
 .right-header {
-    width: 250px;
+    width: 225px;
     display: flex;
     justify-content: space-between;
+    margin-right: 30px;
 }
 
 .left-header {
     height: 100px;
+    display: flex;
+    justify-content: left;
+}
+
+#message {
+    font-size: 8px;
+    display: flex;
+    width: 100%;
+    height: 10px;
+    margin-bottom: 10px;
+    color: red;
+}
+
+#username-display {
+    visibility: hidden;
+    margin-left: 50px;
+}
+
+#login-register {
+    background: none;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    border: none;
+    height: 14px;
+    margin-top: -1px;
+    transition: 0.3s;
+}
+
+#login-register:hover {
+    color: red;
+}
+
+#login-form {
+    position: absolute;
+    top: 280px;
+    left: 630px;
+    display: none;
+    flex-direction: column;
+    z-index: 1;
+
+    background-color: #050505;
+    padding: 30px;
+}
+
+#username, #password {
+    margin-bottom: 15px;
+    background-color: transparent;
+    border: none;
+    border: 1px solid white;
+    color: white;
+    font-size: 10px;
+    padding: 5px;
+}
+
+#password {
+    margin-bottom: 40px;
+}
+
+#submit-login, #cancel-login, #submit-register {
+    background-color: white;
+    border: none;
+    font-family: 'Courier New', Courier, monospace;
+    color: black;
+    font-size: 10px;
+}
+
+#submit-register {
+    margin-top: 5px;
+}
+
+#cancel-login {
+    margin-top: 5px;
+    background-color: transparent;
+    color: white;
+    border: 1px solid white;
 }
 
 img {
@@ -70,16 +174,58 @@ h1 {
     justify-content: center;
 }
 
-#actions {
+.banner {
+    border: #171717;
+    border-width: 1px;
+}
+
+.right-column {
+    margin: 0;
+    display: flex;
+    flex-direction: column
+}
+
+.left-column {
     position: absolute;
-    top: 250px;
-    left: 1180px;
+    left: 120px;
+    top: 230px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#leaderboard {
+    margin-top: 10px;
+    font-size: 11px;
     display: flex;
     flex-direction: column;
 }
 
+#history-label {
+    position: absolute;
+    top: 275px;
+    left: 1180px;
+    font-size: 10px;
+}
+
+#action-toggle {
+    position: absolute;
+    top: 230px;
+    left: 1180px;
+    font-size: 35px;
+}
+
+#actions {
+    position: absolute;
+    top: 290px;
+    left: 1180px;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+}
+
 .actions {
-    margin: 1px;
+    margin: 0px;
 }
 
 .scoreboard {
@@ -174,6 +320,34 @@ h1 {
     margin-top: 20px;
 }
 
+#play_music {
+    border: 2px solid white;
+    color: red;
+    background: transparent;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+    
+    margin: 0;
+    padding: 0;
+
+    margin-left: 50px;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+#play_music:hover {
+    background: red;
+    color: transparent;
+}
+
 #results {
     width: 100%;
     padding-left: 50px;
@@ -259,7 +433,7 @@ h1 {
     position: absolute;
     width: 202px;
     height: 16px;
-    left: 160px;
+    left: 180px;
     top: 400px;
 
     font-family: 'Courier New', Courier, monospace;
